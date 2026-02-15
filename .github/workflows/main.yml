@@ -8,13 +8,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build with Buildozer (Final Fix)
+      - name: Build with Buildozer (Fixed Syntax)
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/home/user/hostcwd \
             -e "BUILDOZER_ALLOW_KIVY_LICENSE_ACCEPTANCE=1" \
             kivy/buildozer:latest \
-            /bin/bash -c "yes | buildozer android debug"
+            android debug --accept-sdk-license
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
