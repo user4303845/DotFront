@@ -1,4 +1,4 @@
-name: Build APK
+name: Build APK (Buildozer-Free)
 on: [push, workflow_dispatch]
 
 jobs:
@@ -7,31 +7,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Setup Java & Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install System Dependencies
+      - name: Install Android SDK/NDK Tools
         run: |
           sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev tk-dev libgdbm-compat-dev libc6-dev libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
+          sudo apt install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev tk-dev libgdbm-compat-dev libc6-dev libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
+          pip install --upgrade pip
+          pip install cython==0.29.33 python-for-android
 
-      - name: Install Buildozer and Cython
+      - name: Build with python-for-android
         run: |
-          python3 -m pip install --upgrade pip
-          # Global install to avoid pathing issues
-          sudo pip3 install cython==0.29.33 buildozer virtualenv
-
-      - name: Build APK (The Fix)
-        run: |
-          # We manually fix the permissions of the current folder so Buildozer doesn't cry
-          sudo chown -R runner:docker .
-          # Run buildozer directly without the 'user' conflict
-          yes | buildozer -v android debug --accept-sdk-license
+          # We tell p4a exactly what we want without Buildozer's interference
+          p4a apk --sdk-dir $ANDROID_HOME \
+                  --ndk-dir $ANDROID_NDK_HOME \
+                  --dist_name myapp \
+                  --package com.yourname.dotfront \
+                  --name "DotFront" \
+                  --version 0.1 \
+                  --bootstrap sdl2 \
+                  --requirements python3,kivy,pygame-ce \
+                  --arch arm64-v8a \
+                  --permission INTERNET \
+                  --color always
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: DotFront-APK
-          path: bin/*.apk
+          path: "*.apk"
