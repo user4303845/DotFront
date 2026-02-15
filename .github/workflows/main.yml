@@ -3,30 +3,18 @@ on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Buildozer Action
+        uses: ArtemSerebriakov/buildozer-action@v1
         with:
-          python-version: '3.10'
-
-      - name: Install System Dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev tk-dev libgdbm-compat-dev libc6-dev libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
-
-      - name: Install Python Tools
-        run: |
-          python3 -m pip install --upgrade pip
-          # Forced global install
-          sudo pip3 install cython==0.29.33 buildozer virtualenv
-
-      - name: Build APK with Buildozer
-        run: |
-          # We removed the 'clean' command that caused the crash
-          yes | buildozer -v android debug --accept-sdk-license
+          buildozer_version: master
+          python_version: 3.10
+          # This action handles the Cython, the SDK, and the NDK automatically
+          command: buildozer android debug --accept-sdk-license
+          repository_read_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
