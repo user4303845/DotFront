@@ -8,14 +8,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build with Buildozer (No-User-Flag Fix)
+      - name: Build with Buildozer (Root Fix)
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/home/user/hostcwd \
             -e "BUILDOZER_ALLOW_KIVY_LICENSE_ACCEPTANCE=1" \
+            -e "BUILDOZER_WARN_ON_ROOT=0" \
             --entrypoint /bin/bash \
             kivy/buildozer:latest \
-            -c "pip install cython==0.29.33 && buildozer android debug --accept-sdk-license"
+            -c "pip install cython==0.29.33 && yes | buildozer android debug --accept-sdk-license"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
