@@ -7,20 +7,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # This is the exact repository name found on the Marketplace
       - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
+        # Using the official Kivy-maintained action to avoid permission bugs
+        uses: kivy/buildozer-action@master
         with:
-          # 'stable' ensures we don't use buggy beta features
-          buildozer_version: stable
           command: buildozer android debug --accept-sdk-license
-          # We tell it specifically to look in the root folder
-          workdir: .
+          buildozer_version: stable
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: DotFront-APK
-          # The action saves the APK in a predictable place
-          path: ${{ steps.buildozer.outputs.filename }}
+          # The official action puts the APK in the 'bin/' folder
+          path: bin/*.apk
