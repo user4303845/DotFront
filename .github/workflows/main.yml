@@ -8,13 +8,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build with Buildozer (Fixed Syntax)
+      - name: Build with Buildozer (Docker + Cython Fix)
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/home/user/hostcwd \
             -e "BUILDOZER_ALLOW_KIVY_LICENSE_ACCEPTANCE=1" \
             kivy/buildozer:latest \
-            android debug --accept-sdk-license
+            /bin/bash -c "pip install --user cython==0.29.33 && buildozer android debug --accept-sdk-license"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
