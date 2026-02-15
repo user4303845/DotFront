@@ -13,8 +13,9 @@ jobs:
           docker run --rm \
             -v ${{ github.workspace }}:/home/user/hostcwd \
             -e "BUILDOZER_ALLOW_KIVY_LICENSE_ACCEPTANCE=1" \
+            --entrypoint /bin/bash \
             kivy/buildozer:latest \
-            /bin/bash -c "pip install --user cython==0.29.33 && buildozer android debug --accept-sdk-license"
+            -c "pip install --user cython==0.29.33 && buildozer android debug --accept-sdk-license"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
