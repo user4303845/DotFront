@@ -3,20 +3,35 @@ on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build with Buildozer
-        # Using the official Kivy-maintained action to avoid permission bugs
-        uses: kivy/buildozer-action@master
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          command: buildozer android debug --accept-sdk-license
-          buildozer_version: stable
+          python-version: '3.10'
 
-      - name: Upload artifacts
+      - name: Install System Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev tk-dev libgdbm-compat-dev libc6-dev libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
+
+      - name: Install Buildozer and Cython
+        run: |
+          python3 -m pip install --upgrade pip
+          # Global install to avoid pathing issues
+          sudo pip3 install cython==0.29.33 buildozer virtualenv
+
+      - name: Build APK (The Fix)
+        run: |
+          # We manually fix the permissions of the current folder so Buildozer doesn't cry
+          sudo chown -R runner:docker .
+          # Run buildozer directly without the 'user' conflict
+          yes | buildozer -v android debug --accept-sdk-license
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: DotFront-APK
-          # The official action puts the APK in the 'bin/' folder
           path: bin/*.apk
