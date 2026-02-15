@@ -3,20 +3,31 @@ on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Build with Buildozer (Root Fix)
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install System Dependencies
         run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/home/user/hostcwd \
-            -e "BUILDOZER_ALLOW_KIVY_LICENSE_ACCEPTANCE=1" \
-            -e "BUILDOZER_WARN_ON_ROOT=0" \
-            --entrypoint /bin/bash \
-            kivy/buildozer:latest \
-            -c "pip install cython==0.29.33 && yes | buildozer android debug --accept-sdk-license"
+          sudo apt update
+          sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev tk-dev libgdbm-compat-dev libc6-dev libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
+
+      - name: Install Python Tools (The Cython Fix)
+        run: |
+          python3 -m pip install --upgrade pip
+          # We use --user just like the error message requested
+          python3 -m pip install --user cython==0.29.33 buildozer 
+          # This line ensures the 'buildozer' command is recognized
+          echo "/home/runner/.local/bin" >> $GITHUB_PATH
+
+      - name: Build APK with Buildozer
+        run: |
+          yes | buildozer android debug --accept-sdk-license
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
