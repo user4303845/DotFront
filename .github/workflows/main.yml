@@ -10,20 +10,18 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.10' # 3.10 is MUCH more stable for Android builds
 
       - name: Install System Dependencies
         run: |
           sudo apt update
           sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev tk-dev libgdbm-compat-dev libc6-dev libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
 
-      - name: Install Python Tools (The Cython Fix)
+      - name: Install Python Tools (Global Fix)
         run: |
           python3 -m pip install --upgrade pip
-          # We use --user just like the error message requested
-          python3 -m pip install --user cython==0.29.33 buildozer 
-          # This line ensures the 'buildozer' command is recognized
-          echo "/home/runner/.local/bin" >> $GITHUB_PATH
+          # No --user flag! This forces it into the main system so hostpython CANNOT miss it
+          python3 -m pip install cython==0.29.33 buildozer virtualenv
 
       - name: Build APK with Buildozer
         run: |
