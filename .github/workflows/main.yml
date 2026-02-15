@@ -1,0 +1,24 @@
+name: Build APK
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libtool autoconf automake pkg-config libffi-dev libssl-dev
+
+      - name: Build with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        with:
+          buildozer_version: master
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: DotFront-APK
+          path: bin/*.apk
