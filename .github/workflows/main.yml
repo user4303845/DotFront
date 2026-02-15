@@ -8,13 +8,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build with Buildozer (Official Docker)
+      - name: Build with Buildozer (Final Fix)
         run: |
-          # We run the official Kivy image and map your folder to it
           docker run --rm \
             -v ${{ github.workspace }}:/home/user/hostcwd \
+            -e "BUILDOZER_ALLOW_KIVY_LICENSE_ACCEPTANCE=1" \
             kivy/buildozer:latest \
-            android debug
+            /bin/bash -c "yes | buildozer android debug"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
