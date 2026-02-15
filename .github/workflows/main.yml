@@ -10,22 +10,28 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10' # 3.10 is MUCH more stable for Android builds
+          python-version: '3.10'
+
+      - name: Cache Buildozer global directory
+        uses: actions/cache@v4
+        with:
+          path: .buildozer
+          key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
 
       - name: Install System Dependencies
         run: |
           sudo apt update
           sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev tk-dev libgdbm-compat-dev libc6-dev libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
 
-      - name: Install Python Tools (Global Fix)
+      - name: Install Python Tools
         run: |
           python3 -m pip install --upgrade pip
-          # No --user flag! This forces it into the main system so hostpython CANNOT miss it
           python3 -m pip install cython==0.29.33 buildozer virtualenv
 
-      - name: Build APK with Buildozer
+      - name: Build APK with Buildozer (Verbose)
         run: |
-          yes | buildozer android debug --accept-sdk-license
+          # The -v flag ensures constant output to prevent idle timeouts
+          yes | buildozer -v android debug --accept-sdk-license
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
