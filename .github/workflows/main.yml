@@ -20,13 +20,12 @@ jobs:
       - name: Install Python Tools
         run: |
           python3 -m pip install --upgrade pip
-          # We install these globally so the build-tools MUST see them
+          # Forced global install
           sudo pip3 install cython==0.29.33 buildozer virtualenv
 
       - name: Build APK with Buildozer
         run: |
-          # We add 'clean' to make sure no old garbage is left over
-          buildozer android clean
+          # We removed the 'clean' command that caused the crash
           yes | buildozer -v android debug --accept-sdk-license
 
       - name: Upload APK
