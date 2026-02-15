@@ -7,16 +7,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Buildozer Action
-        uses: artem-serebriakov/buildozer-action@v1
+      # This is the exact repository name found on the Marketplace
+      - name: Build with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
         with:
-          buildozer_version: master
-          python_version: 3.10
+          # 'stable' ensures we don't use buggy beta features
+          buildozer_version: stable
           command: buildozer android debug --accept-sdk-license
-          buildozer_config: buildozer.spec
+          # We tell it specifically to look in the root folder
+          workdir: .
 
-      - name: Upload APK
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: DotFront-APK
-          path: bin/*.apk
+          # The action saves the APK in a predictable place
+          path: ${{ steps.buildozer.outputs.filename }}
