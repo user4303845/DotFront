@@ -1,4 +1,4 @@
-name: Build DotFront APK with p4a (NDK 25b)
+name: Build DotFront APK (Forced NDK 25b)
 
 on:
   push:
@@ -21,24 +21,30 @@ jobs:
 
       - name: Install Android SDK & NDK 25b
         run: |
-          # Download and install Android SDK command line tools
+          # Create SDK directory
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd $HOME/android-sdk/cmdline-tools
+
+          # Download command line tools
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
           unzip -q commandlinetools-linux-9477386_latest.zip
           mv cmdline-tools latest
+
+          # Set up paths for this step
           export ANDROID_SDK_ROOT=$HOME/android-sdk
           export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
 
-          # Accept licenses and install SDK platform and NDK
+          # Accept licenses and install platform-tools, platform 34, and NDK 25b
           yes | sdkmanager --licenses
           sdkmanager "platform-tools" "platforms;android-34" "ndk;25.1.8937393"
 
-          # Set environment variables for subsequent steps
+          # Save SDK path for later steps
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.1.8937393" >> $GITHUB_ENV
-          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
+
+          # Copy NDK 25b to a custom location (to ensure it's not overwritten)
+          NDK_CUSTOM_DIR=$HOME/android-ndk-r25b
+          cp -r $ANDROID_SDK_ROOT/ndk/25.1.8937393 $NDK_CUSTOM_DIR
+          echo "NDK_CUSTOM_DIR=$NDK_CUSTOM_DIR" >> $GITHUB_ENV
 
       - name: Install system dependencies
         run: |
@@ -60,12 +66,16 @@ jobs:
           pip install --upgrade pip
           pip install cython==0.29.33 python-for-android
 
+      - name: Unset conflicting environment variables
+        run: |
+          unset ANDROID_NDK_HOME ANDROID_NDK_ROOT
+
       - name: Verify NDK version
         run: |
-          echo "NDK root: $ANDROID_NDK_ROOT"
-          ls -l $ANDROID_NDK_ROOT
+          echo "Using NDK at: $NDK_CUSTOM_DIR"
+          $NDK_CUSTOM_DIR/ndk-build --version
 
-      - name: Build APK with p4a
+      - name: Build APK with p4a (explicit NDK)
         run: |
           p4a apk \
             --private . \
@@ -73,11 +83,13 @@ jobs:
             --name "DotFront" \
             --version 0.1 \
             --bootstrap sdl2 \
-            --requirements python3,pygame-ce,sdl2_ttf,freetype \
+            --requirements python3,pygame-ce \
             --arch arm64-v8a \
             --arch armeabi-v7a \
             --android-api 34 \
             --ndk-api 21 \
+            --sdk-dir $ANDROID_SDK_ROOT \
+            --ndk-dir $NDK_CUSTOM_DIR \
             --permission INTERNET \
             --debug
 
