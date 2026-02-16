@@ -1,4 +1,4 @@
-name: Build DotFront APK with p4a (sdl2 bootstrap)
+name: Build DotFront APK with p4a (NDK 25b)
 
 on:
   push:
@@ -19,10 +19,26 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Set up Android SDK with NDK 25b
-        uses: android-actions/setup-android@v3
-        with:
-          ndk-version: '25.1.8937393'   # NDK r25b (recommended for p4a)
+      - name: Install Android SDK & NDK 25b
+        run: |
+          # Download and install Android SDK command line tools
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          cd $HOME/android-sdk/cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip -q commandlinetools-linux-9477386_latest.zip
+          mv cmdline-tools latest
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
+
+          # Accept licenses and install SDK platform and NDK
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-34" "ndk;25.1.8937393"
+
+          # Set environment variables for subsequent steps
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/25.1.8937393" >> $GITHUB_ENV
+          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
 
       - name: Install system dependencies
         run: |
@@ -44,10 +60,12 @@ jobs:
           pip install --upgrade pip
           pip install cython==0.29.33 python-for-android
 
+      - name: Verify NDK version
+        run: |
+          echo "NDK root: $ANDROID_NDK_ROOT"
+          ls -l $ANDROID_NDK_ROOT
+
       - name: Build APK with p4a
-        env:
-          ANDROID_SDK_ROOT: $ANDROID_HOME
-          ANDROID_NDK_ROOT: $ANDROID_NDK_HOME
         run: |
           p4a apk \
             --private . \
