@@ -69,9 +69,11 @@ def fade_transition(surface, duration=1.0, fade_out=True):
         clock.tick(FPS)
 
 def log_exception(e):
-    """Write exception details to a file on the device (if possible)."""
+    """Write exception details to a file in the app's private directory."""
     try:
-        with open('/sdcard/dotfront_crash.txt', 'w') as f:
+        # Use a path inside the app's private storage (no permissions needed)
+        log_path = os.path.join(os.environ.get('PYTHONPATH', '.'), 'crash_log.txt')
+        with open(log_path, 'w') as f:
             f.write(str(e) + "\n")
             traceback.print_exc(file=f)
     except:
@@ -238,8 +240,8 @@ def main_game(selected_map=MAP_PLAINS):
     middle_down = False
     last_mouse_pos = (0, 0)
 
-    # In-game UI buttons – using pygame.font.Font instead of SysFont
-    button_font = pygame.font.Font(None, 48)
+    # In-game UI buttons – using SysFont for Android compatibility
+    button_font = pygame.font.SysFont('sans-serif', 48)
     select_button = pygame.Rect(WIDTH - 240, HEIGHT - 90, 110, 60)
     unselect_button = pygame.Rect(WIDTH - 120, HEIGHT - 90, 110, 60)
     exit_button = pygame.Rect(20, HEIGHT - 90, 110, 60)
@@ -572,9 +574,9 @@ def main_game(selected_map=MAP_PLAINS):
                 result_color = RED
 
             # Draw stats
-            title_font = pygame.font.Font(None, 120)
-            stat_font = pygame.font.Font(None, 72)
-            small_font = pygame.font.Font(None, 48)
+            title_font = pygame.font.SysFont('sans-serif', 120)
+            stat_font = pygame.font.SysFont('sans-serif', 72)
+            small_font = pygame.font.SysFont('sans-serif', 48)
 
             draw_text(screen, result_text, title_font, result_color, WIDTH//2, HEIGHT//2 - 150)
             draw_text(screen, f"Enemies Killed: {stats.player_kills}", stat_font, WHITE, WIDTH//2, HEIGHT//2 - 50)
@@ -610,10 +612,11 @@ class Menu:
         self.anim_offset = 0
         self.particles = []
         self.init_particles(100)
-        self.font_large = pygame.font.Font(None, 120)
-        self.font_medium = pygame.font.Font(None, 72)
-        self.font_small = pygame.font.Font(None, 48)
-        self.font_tiny = pygame.font.Font(None, 36)
+        # Use SysFont for Android compatibility
+        self.font_large = pygame.font.SysFont('sans-serif', 120)
+        self.font_medium = pygame.font.SysFont('sans-serif', 72)
+        self.font_small = pygame.font.SysFont('sans-serif', 48)
+        self.font_tiny = pygame.font.SysFont('sans-serif', 36)
 
         self.build_main_buttons()
         self.build_options_buttons()
@@ -867,6 +870,8 @@ class Menu:
 # -------------------- ENTRY POINT --------------------
 def main():
     global WIDTH, HEIGHT, screen, clock
+    # Force working directory to script location (important for Android)
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
     pygame.init()
     info = pygame.display.Info()
     WIDTH, HEIGHT = info.current_w, info.current_h
