@@ -71,7 +71,7 @@ jobs:
             --name "DotFront" \
             --version 0.1 \
             --bootstrap sdl2 \
-            --requirements python3,pygame \
+            --requirements python3,pygame-ce \
             --arch arm64-v8a \
             --arch armeabi-v7a \
             --android-api 34 \
