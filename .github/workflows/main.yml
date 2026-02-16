@@ -3,7 +3,7 @@ name: Build DotFront APK with p4a (pygame bootstrap)
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:        # allows manual trigger
+  workflow_dispatch:
 
 jobs:
   build:
@@ -28,7 +28,7 @@ jobs:
           sudo apt install -y \
             git zip unzip autoconf libtool \
             pkg-config zlib1g-dev libncurses5-dev \
-            libncursesw5-dev libtinfo5 cmake \
+            libncursesw5-dev cmake \
             libffi-dev libssl-dev libltdl-dev \
             libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
 
