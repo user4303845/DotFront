@@ -1,4 +1,4 @@
-name: Build DotFront APK with p4a (pygame bootstrap)
+name: Build DotFront APK with p4a (sdl2 bootstrap)
 
 on:
   push:
@@ -19,8 +19,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Set up Android SDK
+      - name: Set up Android SDK with NDK 25b
         uses: android-actions/setup-android@v3
+        with:
+          ndk-version: '25.1.8937393'   # NDK r25b (recommended for p4a)
 
       - name: Install system dependencies
         run: |
@@ -45,15 +47,15 @@ jobs:
       - name: Build APK with p4a
         env:
           ANDROID_SDK_ROOT: $ANDROID_HOME
-          ANDROID_NDK_ROOT: $ANDROID_NDK_LATEST_HOME
+          ANDROID_NDK_ROOT: $ANDROID_NDK_HOME
         run: |
           p4a apk \
             --private . \
             --package com.yourname.dotfront \
             --name "DotFront" \
             --version 0.1 \
-            --bootstrap pygame \
-            --requirements python3,pygame-ce \
+            --bootstrap sdl2 \
+            --requirements python3,pygame-ce,sdl2_ttf,freetype \
             --arch arm64-v8a \
             --arch armeabi-v7a \
             --android-api 34 \
