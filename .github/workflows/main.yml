@@ -34,9 +34,13 @@ jobs:
           export ANDROID_SDK_ROOT=$HOME/android-sdk
           export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
 
-          # Accept licenses and install platform-tools, platform 34, and NDK 25b
+          # Accept licenses and install required components
           yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-34" "ndk;25.1.8937393"
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0" \
+            "ndk;25.1.8937393"
 
           # Save SDK path for later steps
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
