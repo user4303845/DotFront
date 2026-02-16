@@ -21,31 +21,20 @@ jobs:
 
       - name: Install Android SDK & NDK 25b
         run: |
-          # Create SDK directory
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd $HOME/android-sdk/cmdline-tools
-
-          # Download command line tools
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
           unzip -q commandlinetools-linux-9477386_latest.zip
           mv cmdline-tools latest
-
-          # Set up paths for this step
           export ANDROID_SDK_ROOT=$HOME/android-sdk
           export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
-
-          # Accept licenses and install required components
           yes | sdkmanager --licenses
           sdkmanager \
             "platform-tools" \
             "platforms;android-34" \
             "build-tools;34.0.0" \
             "ndk;25.1.8937393"
-
-          # Save SDK path for later steps
           echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-
-          # Copy NDK 25b to a custom location (to ensure it's not overwritten)
           NDK_CUSTOM_DIR=$HOME/android-ndk-r25b
           cp -r $ANDROID_SDK_ROOT/ndk/25.1.8937393 $NDK_CUSTOM_DIR
           echo "NDK_CUSTOM_DIR=$NDK_CUSTOM_DIR" >> $GITHUB_ENV
@@ -74,11 +63,6 @@ jobs:
         run: |
           unset ANDROID_NDK_HOME ANDROID_NDK_ROOT
 
-      - name: Verify NDK version
-        run: |
-          echo "Using NDK at: $NDK_CUSTOM_DIR"
-          $NDK_CUSTOM_DIR/ndk-build --version
-
       - name: Build APK with p4a (explicit NDK)
         run: |
           p4a apk \
@@ -95,10 +79,26 @@ jobs:
             --sdk-dir $ANDROID_SDK_ROOT \
             --ndk-dir $NDK_CUSTOM_DIR \
             --permission INTERNET \
-            --debug
+            --debug \
+            --dist-name dotfront_dist
+
+      - name: Locate APK
+        run: |
+          # Try to find the APK in common locations
+          APK_PATH=$(find . -name "*.apk" -type f | head -n 1)
+          if [ -z "$APK_PATH" ]; then
+            APK_PATH=$(find ~/.local/share/python-for-android/dists -name "*.apk" -type f | head -n 1)
+          fi
+          if [ -z "$APK_PATH" ]; then
+            echo "APK not found!"
+            exit 1
+          fi
+          echo "Found APK at: $APK_PATH"
+          mkdir -p artifacts
+          cp "$APK_PATH" artifacts/DotFront.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: DotFront-APK
-          path: bin/*.apk
+          path: artifacts/DotFront.apk
